@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Examination Platform</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.5; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        /* Registration Page Styles */
+        .registration-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .registration-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 480px;
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .registration-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .registration-card:hover::before {
+            left: 100%;
+        }
+
+        .registration-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 35px 70px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .registration-title {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 40px;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .registration-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            font-family: inherit;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 0 3px rgba(102, 126, 234, 0.1),
+                0 8px 25px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .register-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .register-btn:hover::before {
+            left: 100%;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 15px 35px rgba(102, 126, 234, 0.4),
+                0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .register-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* IDE Page Styles */
+        .ide-container {
+            display: none;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            color: #ffffff;
+        }
+
+        .ide-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .timer {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 107, 107, 0.2);
+        }
+
+        .ide-content {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .code-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .editor-header {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+
+        .code-textarea {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            outline: none;
+            color: #e8e8e8;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            padding: 20px;
+            resize: none;
+            line-height: 1.6;
+        }
+
+        .code-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .output-section {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-header {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+            padding: 10px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .output-display {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #f0f6fc;
+            line-height: 1.5;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .run-btn {
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+        }
+
+        .run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.4);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .clear-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Warning Modal */
+        .warning-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .warning-content {
+            background: rgba(255, 71, 87, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 450px;
+            animation: warningPulse 0.6s ease-in-out;
+            box-shadow: 
+                0 25px 50px rgba(255, 71, 87, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes warningPulse {
+            0% { transform: scale(0.8) rotate(-5deg); opacity: 0; }
+            50% { transform: scale(1.05) rotate(2deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .warning-title {
+            font-size: 28px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        .warning-message {
+            font-size: 16px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .warning-close {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .warning-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .error-output {
+            color: #ff6b6b;
+        }
+
+        .success-output {
+            color: #51cf66;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .registration-card {
+                padding: 30px;
+                margin: 10px;
+            }
+            
+            .ide-content {
+                flex-direction: column;
+            }
+            
+            .output-section {
+                width: 100%;
+                height: 40%;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Registration Page -->
+    <div id="registrationPage" class="registration-container">
+        <div class="registration-card">
+            <h2 class="registration-title">Student Registration</h2>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label class="form-label" for="studentName">Student Name</label>
+                    <input type="text" id="studentName" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="rollNumber">Roll Number</label>
+                    <input type="text" id="rollNumber" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="section">Section</label>
+                    <select id="section" class="form-select" required>
+                        <option value="">Choose Section</option>
+                        <option value="A">1st Year</option>
+                        <option value="B">2nd Year</option>
+                        <option value="C">3rd Year</option>
+                        
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="registrationNumber">Registration Number</label>
+                    <input type="text" id="registrationNumber" class="form-input" required>
+                </div>
+                
+                <button type="submit" class="register-btn">Start Examination</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- IDE Page -->
+    <div id="idePage" class="ide-container">
+        <div class="ide-header">
+            <div class="student-info" id="studentInfo"></div>
+            <div class="timer" id="timer">Time: 00:00:00</div>
+        </div>
+        
+        <div class="ide-content">
+            <div class="code-editor">
+                <div class="editor-header">Code Editor - Python</div>
+                <textarea id="codeEditor" class="code-textarea" placeholder="# Write your Python code here...
+print('Hello, World!')"></textarea>
+            </div>
+            
+            <div class="output-section">
+                <div class="output-header">Output</div>
+                <div class="input-section">
+                    <input type="text" id="inputBox" class="input-box" placeholder="Input (if required)">
+                </div>
+                <div id="outputDisplay" class="output-display">Ready to run code...</div>
+                <div class="controls">
+                    <button id="runBtn" class="btn run-btn">▶ Run Code</button>
+                    <button id="submitBtn" class="btn submit-btn">📤 Submit</button>
+                    <button id="clearBtn" class="btn clear-btn">🗑 Clear</button>
+                    <p>Made by: Ronak Jain, Nikhil Prasanth</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Modal -->
+    <div id="warningModal" class="warning-modal">
+        <div class="warning-content">
+            <div class="warning-title">⚠️ WARNING!</div>
+            <div class="warning-message" id="warningMessage">Unauthorized action detected!</div>
+            <button id="warningClose" class="warning-close">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Create animated particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Initialize particles
+        createParticles();
+
+        // Firebase Configuration - Replace with your actual config
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBQj6OirFHu0Xeb6FTuZsy9AZXaEm_dZ2g",
+  authDomain: "python-testdb.firebaseapp.com",
+  databaseURL: "https://python-testdb-default-rtdb.firebaseio.com",
+  projectId: "python-testdb",
+  storageBucket: "python-testdb.firebasestorage.app",
+  messagingSenderId: "1098396249329",
+  appId: "1:1098396249329:web:84817bab89d0fe488ecd50",
+  measurementId: "G-2BM815YGDR"
+};
+
+        // Initialize Firebase only if config is properly set
+        let database = null;
+        if (firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("Firebase initialized successfully");
+        } else {
+            console.log("Firebase not configured - using local storage only");
+        }
+
+        // Global variables
+        let studentData = {};
+        let examStartTime = null;
+        let timerInterval = null;
+        let warningCount = 0;
+        let isSubmitted = false;
+
+        // Database Functions
+        
+        // Firebase Database Integration
+        async function saveToFirebase(data) {
+            if (!database) {
+                console.log("Firebase not configured, saving to local storage");
+                localStorage.setItem('examData_' + data.rollNumber, JSON.stringify(data));
+                return true;
+            }
+            
+            try {
+                // Save to Firebase Realtime Database
+                await database.ref('students/' + data.rollNumber).set({
+                    ...data,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                console.log('Data saved to Firebase successfully');
+                
+                // Also save to local storage as backup
+                localStorage.setItem('examData_' + data.rollNumber, JSON.stringify(data));
+                return true;
+                
+            } catch (error) {
+                console.error('Firebase save error:', error);
+                console.log('Falling back to local storage');
+                localStorage.setItem('examData_' + data.rollNumber, JSON.stringify(data));
+                return false;
+            }
+        }
+
+        // Save warning to Firebase
+        async function saveWarningToDatabase(warningData) {
+            const warningRecord = {
+                rollNumber: studentData.rollNumber,
+                name: studentData.name,
+                warning: warningData.message,
+                timestamp: warningData.timestamp,
+                examSession: studentData.startTime
+            };
+            
+            if (!database) {
+                console.log("Firebase not configured, saving warning to local storage");
+                let warnings = JSON.parse(localStorage.getItem('warnings') || '[]');
+                warnings.push(warningRecord);
+                localStorage.setItem('warnings', JSON.stringify(warnings));
+                return;
+            }
+            
+            try {
+                // Save to Firebase warnings collection
+                await database.ref('warnings').push(warningRecord);
+                console.log('Warning saved to Firebase');
+            } catch (error) {
+                console.error('Failed to save warning to Firebase:', error);
+                // Save to local storage as fallback
+                let warnings = JSON.parse(localStorage.getItem('warnings') || '[]');
+                warnings.push(warningRecord);
+                localStorage.setItem('warnings', JSON.stringify(warnings));
+            }
+        }
+
+        // Test Firebase connection
+        function testFirebaseConnection() {
+            if (!database) {
+                document.getElementById('outputDisplay').innerHTML = 
+                    '<span style="color: #ffa500;">⚠️ Firebase not configured - using local storage</span>\n\n' +
+                    'To enable Firebase:\n' +
+                    '1. Create a Firebase project\n' +
+                    '2. Get your config from Project Settings\n' +
+                    '3. Replace the firebaseConfig in the code\n\n' +
+                    'Your data is being saved locally for now.';
+                return;
+            }
+            
+            // Test write to Firebase
+            database.ref('test').set({
+                message: 'Firebase connection test',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                document.getElementById('outputDisplay').innerHTML = 
+                    '<span style="color: #51cf66;">✅ Firebase connected successfully!</span>\n\n' +
+                    'Your exam data will be saved to the cloud database.';
+            }).catch((error) => {
+                document.getElementById('outputDisplay').innerHTML = 
+                    '<span style="color: #ff6b6b;">❌ Firebase connection failed:</span>\n' + error.message + '\n\n' +
+                    'Falling back to local storage.';
+            });
+        }
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            studentData = {
+                name: document.getElementById('studentName').value,
+                rollNumber: document.getElementById('rollNumber').value,
+                section: document.getElementById('section').value,
+                registrationNumber: document.getElementById('registrationNumber').value,
+                startTime: new Date().toISOString(),
+                warnings: []
+            };
+            
+            // Store data
+            sessionStorage.setItem('examData', JSON.stringify(studentData));
+            
+            // Switch to IDE
+            document.getElementById('registrationPage').style.display = 'none';
+            document.getElementById('idePage').style.display = 'block';
+            
+            // Initialize IDE
+            initializeIDE();
+        });
+
+        function initializeIDE() {
+            // Set student info
+            document.getElementById('studentInfo').textContent = 
+                `${studentData.name} | Roll: ${studentData.rollNumber} | Section: ${studentData.section}`;
+            
+            // Start timer
+            examStartTime = Date.now();
+            startTimer();
+            
+            // Setup security
+            setupSecurity();
+            
+            // Setup auto-bracket completion
+            setupBracketCompletion();
+            
+            // Setup controls
+            setupControls();
+            
+            // Test Firebase connection (optional - for debugging)
+            // Uncomment the next line to test Firebase connection
+            testFirebaseConnection();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!isSubmitted) {
+                    const elapsed = Date.now() - examStartTime;
+                    const hours = Math.floor(elapsed / 3600000);
+                    const minutes = Math.floor((elapsed % 3600000) / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    
+                    document.getElementById('timer').textContent = 
+                        `Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function setupSecurity() {
+            // Disable copy/paste
+            document.getElementById('codeEditor').addEventListener('paste', function(e) {
+                e.preventDefault();
+                showWarning('Copy/paste is not allowed during the examination!');
+            });
+            
+            document.getElementById('codeEditor').addEventListener('copy', function(e) {
+                e.preventDefault();
+                showWarning('Copy/paste is not allowed during the examination!');
+            });
+            
+            // Disable right-click
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showWarning('Right-click is disabled during the examination!');
+            });
+            
+            // Detect tab switching
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && !isSubmitted) {
+                    showWarning('Tab switching detected! Your exam will be auto-submitted.');
+                    setTimeout(autoSubmit, 3000);
+                }
+            });
+            
+            // Disable F12, Ctrl+Shift+I, etc.
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                    (e.ctrlKey && e.key === 'u') ||
+                    (e.ctrlKey && e.key === 'c' && e.target.id === 'codeEditor') ||
+                    (e.ctrlKey && e.key === 'v' && e.target.id === 'codeEditor')) {
+                    e.preventDefault();
+                    showWarning('This action is not allowed during the examination!');
+                }
+            });
+        }
+
+        function setupBracketCompletion() {
+            const editor = document.getElementById('codeEditor');
+            const bracketPairs = {
+                '(': ')',
+                '[': ']',
+                '{': '}',
+                '"': '"',
+                "'": "'"
+            };
+            
+            editor.addEventListener('input', function(e) {
+                const char = e.data;
+                if (bracketPairs[char]) {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const value = this.value;
+                    
+                    // For quotes, check if we should close or not
+                    if ((char === '"' || char === "'") && value[start] === char) {
+                        return; // Don't add closing quote if next char is the same quote
+                    }
+                    
+                    this.value = value.slice(0, start) + bracketPairs[char] + value.slice(end);
+                    this.setSelectionRange(start, start);
+                }
+            });
+        }
+
+        function setupControls() {
+            document.getElementById('runBtn').addEventListener('click', runCode);
+            document.getElementById('submitBtn').addEventListener('click', submitCode);
+            document.getElementById('clearBtn').addEventListener('click', clearOutput);
+            document.getElementById('warningClose').addEventListener('click', closeWarning);
+        }
+        // Load Pyodide for real Python execution
+        let pyodideReadyPromise = null;
+        async function loadPyodideAndPackages() {
+            if (!window.loadPyodide) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
+            document.body.appendChild(script);
+            await new Promise(res => script.onload = res);
+            }
+            return await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/" });
+        }
+
+        // Initialize Pyodide on IDE load
+        pyodideReadyPromise = loadPyodideAndPackages();
+
+       async function runCode() {
+    const code = document.getElementById('codeEditor').value;
+    const input = document.getElementById('inputBox').value;
+    const output = document.getElementById('outputDisplay');
+
+    if (!code.trim()) {
+        output.innerHTML = '<span class="error-output">Error: No code to execute</span>';
+        return;
+    }
+
+    output.innerHTML = '<span style="color:#ffa500;">⏳ Running Python code...</span>';
+
+    try {
+        const pyodide = await pyodideReadyPromise;
+
+        // Set input data before using it in Python
+        pyodide.globals.set("input_data", input.split("\\n"));
+
+        // Now define the custom input() function
+        await pyodide.runPythonAsync(`
+import sys
+_input_lines = iter(input_data)
+
+def input(prompt=None):
+    try:
+        return next(_input_lines)
+    except StopIteration:
+        raise EOFError("No more input")
+
+import builtins
+builtins.input = input
+`);
+
+        let pyOutput = [];
+
+        pyodide.setStdout({
+            batched: (s) => pyOutput.push(s)
+        });
+
+        pyodide.setStderr({
+            batched: (s) => pyOutput.push('<span class="error-output">' + s + '</span>')
+        });
+
+        await pyodide.runPythonAsync(code);
+
+        output.innerHTML = `<span class="success-output">${pyOutput.join('')}</span>` || 'Code executed successfully (no output)';
+    } catch (error) {
+        output.innerHTML = `<span class="error-output">Error: ${error}</span>`;
+    }
+}
+
+        function submitCode() {
+            if (isSubmitted) return;
+            
+            const confirmSubmit = confirm('Are you sure you want to submit your code? This action cannot be undone.');
+            if (!confirmSubmit) return;
+            
+            isSubmitted = true;
+            
+            // Calculate time taken
+            const timeTaken = Date.now() - examStartTime;
+            const timeInMinutes = Math.floor(timeTaken / 60000);
+            const timeInSeconds = Math.floor((timeTaken % 60000) / 1000);
+            
+            // Prepare submission data
+            const submissionData = {
+                ...studentData,
+                code: document.getElementById('codeEditor').value,
+                timeTakenMs: timeTaken,
+                timeTakenFormatted: `${timeInMinutes}m ${timeInSeconds}s`,
+                submittedAt: new Date().toISOString(),
+                totalWarnings: warningCount,
+                status: 'submitted',
+                ipAddress: 'Unknown', // You can get this from your backend
+                userAgent: navigator.userAgent
+            };
+            
+            // Save final submission to database
+            saveToFirebase(submissionData).then(success => {
+                if (success) {
+                    console.log('Final submission saved successfully');
+                } else {
+                    console.error('Failed to save final submission');
+                }
+            });
+            
+            // Show success message
+            document.getElementById('outputDisplay').innerHTML = 
+                '<span class="success-output">✓ Code submitted successfully!\n\nSubmission Details:\n' +
+                `Student: ${studentData.name}\n` +
+                `Roll Number: ${studentData.rollNumber}\n` +
+                `Time Taken: ${timeInMinutes} minutes ${timeInSeconds} seconds\n` +
+                `Total Warnings: ${warningCount}\n` +
+                `Submitted At: ${new Date().toLocaleString()}\n` +
+                (database ? 'Data saved to Firebase!' : 'Data saved locally!') + '\n\n' +
+                'Thank you for participating!</span>';
+            
+            // Disable controls
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('codeEditor').disabled = true;
+            
+            clearInterval(timerInterval);
+        }
+
+        function autoSubmit() {
+            if (!isSubmitted) {
+                showWarning('Auto-submitting due to tab switching...');
+                setTimeout(submitCode, 2000);
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById('outputDisplay').textContent = 'Output cleared...';
+        }
+
+        function showWarning(message) {
+            warningCount++;
+            document.getElementById('warningMessage').textContent = message;
+            document.getElementById('warningModal').style.display = 'flex';
+            
+            const warningData = {
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Store warning locally
+            if (studentData.warnings) {
+                studentData.warnings.push(warningData);
+            }
+            
+            // Save warning to database immediately
+            saveWarningToDatabase(warningData);
+            
+            // Update student record with new warning count
+            const updatedData = {
+                ...studentData,
+                totalWarnings: warningCount,
+                lastWarning: warningData.timestamp,
+                status: 'active_with_warnings'
+            };
+            
+            saveToFirebase(updatedData);
+        }
+
+        function closeWarning() {
+            document.getElementById('warningModal').style.display = 'none';
+        }
+
+        // Prevent back button
+        window.addEventListener('popstate', function(e) {
+            if (!isSubmitted) {
+                showWarning('Navigation is not allowed during the examination!');
+                history.pushState(null, null, window.location.pathname);
+            }
+        });
+        
+        history.pushState(null, null, window.location.pathname);
+        const codeEditor = document.getElementById("codeEditor");
+
+codeEditor.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        const start = codeEditor.selectionStart;
+        const end = codeEditor.selectionEnd;
+
+        const text = codeEditor.value;
+        const before = text.substring(0, start);
+        const after = text.substring(end);
+
+        const lines = before.split("\n");
+        const currentLine = lines[lines.length - 1];
+
+        // Get leading spaces or tabs from the current line
+        const indentMatch = currentLine.match(/^\s*/);
+        const currentIndent = indentMatch ? indentMatch[0] : "";
+
+        // If line ends with ":", increase indent
+        const shouldIndent = currentLine.trim().endsWith(":");
+        const newIndent = shouldIndent ? currentIndent + "    " : currentIndent;
+
+        // Prevent default Enter
+        e.preventDefault();
+
+        // Insert new line with indentation
+        const newPos = start + 1 + newIndent.length;
+        codeEditor.value = before + "\n" + newIndent + after;
+        codeEditor.setSelectionRange(newPos, newPos);
+    }
+});
+
+    </script>
+</body>
+</html>
